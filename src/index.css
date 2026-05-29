@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-weg-green: #009640;
+  --color-weg-dark: #006B2D;
+  --color-weg-light: #E6F5EC;
+  --color-weg-surface: #F5F7FA;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background-color: #F5F7FA;
+  color: #1A1A1A;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
