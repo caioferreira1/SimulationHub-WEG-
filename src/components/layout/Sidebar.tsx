@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { LayoutDashboard, FolderKanban, LogOut } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+import { AppIcon } from '../ui/AppIcon'
 
 const NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -11,18 +12,21 @@ export function Sidebar() {
   const { signOut, user } = useAuth()
 
   return (
-    <aside className="w-56 min-h-screen bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-56 min-h-screen bg-weg-blue dark:bg-weg-blue-dark flex flex-col flex-shrink-0">
       {/* Logo */}
-      <div className="p-5 border-b border-gray-200">
+      <div className="px-4 pt-4 pb-3 border-b border-white/10 space-y-3">
+        <img
+          src="/logo-weg.png"
+          alt="WEG"
+          className="h-6 object-contain brightness-0 invert"
+        />
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-weg-green rounded-md flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-sm">W</span>
-          </div>
+          <AppIcon className="w-8 h-8 flex-shrink-0" />
           <div>
-            <div className="text-sm font-bold text-gray-900 leading-tight">
-              Simulation<span className="text-weg-green">Hub</span>
+            <div className="text-sm font-bold text-white leading-tight">
+              Simulation<span className="text-blue-300">Hub</span>
             </div>
-            <div className="text-[10px] text-gray-400">WMO-C</div>
+            <div className="text-[10px] text-white/50 tracking-wide">WMO-C</div>
           </div>
         </div>
       </div>
@@ -37,8 +41,8 @@ export function Sidebar() {
             className={({ isActive }) =>
               `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
                 isActive
-                  ? 'bg-weg-light text-weg-dark font-medium'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-white/15 text-white font-medium'
+                  : 'text-white/65 hover:bg-white/10 hover:text-white'
               }`
             }
           >
@@ -49,11 +53,11 @@ export function Sidebar() {
       </nav>
 
       {/* User */}
-      <div className="p-3 border-t border-gray-200">
-        <div className="text-xs text-gray-500 px-3 mb-1 truncate">{user?.email}</div>
+      <div className="p-3 border-t border-white/10">
+        <div className="text-xs text-white/40 px-3 mb-1 truncate">{user?.email}</div>
         <button
           onClick={signOut}
-          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm text-white/65 hover:bg-white/10 hover:text-white transition-colors"
         >
           <LogOut size={16} />
           Sair

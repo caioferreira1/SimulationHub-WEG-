@@ -1,10 +1,16 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-weg-green: #009640;
   --color-weg-dark: #006B2D;
   --color-weg-light: #E6F5EC;
-  --color-weg-surface: #F5F7FA;
+  --color-weg-surface: #F0F4FA;
+  --color-weg-blue: #003087;
+  --color-weg-blue-dark: #001D5E;
+  --color-weg-blue-mid: #1B4FBF;
+  --color-weg-blue-light: #E8F0FD;
 }
 
 * {
@@ -14,9 +20,14 @@
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  background-color: #F5F7FA;
+  background-color: #F0F4FA;
   color: #1A1A1A;
   -webkit-font-smoothing: antialiased;
+}
+
+.dark body {
+  background-color: #0F172A;
+  color: #F1F5F9;
 }
 
 #root {
