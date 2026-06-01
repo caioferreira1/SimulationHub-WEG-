@@ -1,3 +1,29 @@
+// ============================================================
+// USER PROFILES
+// ============================================================
+export type UserRole = 'admin' | 'colaborador'
+export type UserStatus = 'pending' | 'approved' | 'rejected'
+
+export interface UserProfile {
+  id: string
+  email: string
+  role: UserRole
+  status: UserStatus
+  page_access: string[]
+  created_at: string
+  updated_at: string
+}
+
+export const APP_PAGES = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'projetos', label: 'Projetos' },
+] as const
+
+export type AppPageId = (typeof APP_PAGES)[number]['id']
+
+// ============================================================
+// PROJECTS & ACTIVITIES
+// ============================================================
 export type ProjectStatus =
   | 'Planejado'
   | 'Em andamento'

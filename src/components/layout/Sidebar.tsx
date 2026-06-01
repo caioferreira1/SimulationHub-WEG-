@@ -1,15 +1,21 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, LogOut } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, LogOut, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { AppIcon } from '../ui/AppIcon'
 
-const NAV = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/projetos', icon: FolderKanban, label: 'Projetos' },
+const NAV_ITEMS = [
+  { to: '/',         icon: LayoutDashboard, label: 'Dashboard', pageId: 'dashboard' },
+  { to: '/projetos', icon: FolderKanban,    label: 'Projetos',  pageId: 'projetos'  },
 ]
 
 export function Sidebar() {
-  const { signOut, user } = useAuth()
+  const { signOut, user, profile } = useAuth()
+
+  const isAdmin = profile?.role === 'admin'
+
+  const visibleNav = isAdmin
+    ? NAV_ITEMS
+    : NAV_ITEMS.filter(item => profile?.page_access.includes(item.pageId))
 
   return (
     <aside className="w-56 min-h-screen bg-weg-blue dark:bg-weg-blue-dark flex flex-col flex-shrink-0">
@@ -33,7 +39,7 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-0.5">
-        {NAV.map(({ to, icon: Icon, label }) => (
+        {visibleNav.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
@@ -50,10 +56,30 @@ export function Sidebar() {
             {label}
           </NavLink>
         ))}
+
+        {/* Admin-only link */}
+        {isAdmin && (
+          <NavLink
+            to="/autorizacoes"
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                isActive
+                  ? 'bg-white/15 text-white font-medium'
+                  : 'text-white/65 hover:bg-white/10 hover:text-white'
+              }`
+            }
+          >
+            <ShieldCheck size={16} />
+            Autorizações
+          </NavLink>
+        )}
       </nav>
 
       {/* User */}
       <div className="p-3 border-t border-white/10">
+        {isAdmin && (
+          <div className="text-[10px] text-white/30 px-3 mb-0.5 uppercase tracking-wider">Admin</div>
+        )}
         <div className="text-xs text-white/40 px-3 mb-1 truncate">{user?.email}</div>
         <button
           onClick={signOut}

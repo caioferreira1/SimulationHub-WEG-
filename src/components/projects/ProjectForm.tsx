@@ -23,7 +23,6 @@ const schema = z.object({
   solicitante:   z.string().min(1, 'Obrigatório'),
   status:        z.string().min(1, 'Obrigatório'),
   colaborador:   z.string().min(1, 'Obrigatório'),
-  andamento:     z.number().min(0).max(100),
   data_final:    z.string().nullable().optional(),
 })
 
@@ -48,7 +47,7 @@ export function ProjectForm({ open, onClose, project }: Props) {
       descricao: '', tipo: 'Estrutural', linha: 'W01', secao: 'Comercial',
       caracteristica: 'Desenvolvimento', data_entrada: new Date().toISOString().split('T')[0],
       prioridade: '2. Média', solicitante: '', status: 'Planejado',
-      colaborador: COLABORADORES[0], andamento: 0, data_final: null,
+      colaborador: COLABORADORES[0], data_final: null,
     },
   })
 
@@ -66,7 +65,6 @@ export function ProjectForm({ open, onClose, project }: Props) {
         solicitante: project.solicitante,
         status: project.status,
         colaborador: project.colaborador,
-        andamento: project.andamento,
         data_final: project.data_final ?? null,
       })
     } else if (open && !project) {
@@ -74,7 +72,7 @@ export function ProjectForm({ open, onClose, project }: Props) {
         descricao: '', tipo: 'Estrutural', linha: 'W01', secao: 'Comercial',
         caracteristica: 'Desenvolvimento', data_entrada: new Date().toISOString().split('T')[0],
         prioridade: '2. Média', solicitante: '', status: 'Planejado',
-        colaborador: COLABORADORES[0], andamento: 0, data_final: null,
+        colaborador: COLABORADORES[0], data_final: null,
       })
       getNextProjectCode().then(setNextCode)
     }
@@ -91,7 +89,7 @@ export function ProjectForm({ open, onClose, project }: Props) {
       if (isEdit) {
         await updateProject.mutateAsync({ id: project!.id, ...data, data_final: data.data_final || null } as any)
       } else {
-        await createProject.mutateAsync({ ...data, data_final: data.data_final || null } as any)
+        await createProject.mutateAsync({ ...data, andamento: 0, data_final: data.data_final || null } as any)
       }
       onClose()
     } catch (err) {
@@ -198,20 +196,11 @@ export function ProjectForm({ open, onClose, project }: Props) {
         </div>
 
         {/* Row 6 */}
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Status" error={errors.status?.message}>
-            <select {...register('status')} className={input()}>
-              {PROJECT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </Field>
-          <Field label={`Andamento: ${watch('andamento')}%`} error={errors.andamento?.message}>
-            <input
-              type="range" min={0} max={100}
-              {...register('andamento', { valueAsNumber: true })}
-              className="w-full accent-weg-green"
-            />
-          </Field>
-        </div>
+        <Field label="Status" error={errors.status?.message}>
+          <select {...register('status')} className={input()}>
+            {PROJECT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </Field>
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">

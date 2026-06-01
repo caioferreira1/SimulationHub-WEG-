@@ -6,7 +6,7 @@ import { Modal } from '../ui/Modal'
 import { useCreateActivity, useUpdateActivity } from '../../hooks/useActivities'
 import { PROJECT_STATUSES, COLABORADORES } from '../../types'
 import type { Activity } from '../../types'
-import { calcHorasColab, calcHorasTotais } from '../../lib/utils'
+import { calcHorasColab, calcHorasTotais, calcDataFim, formatDate } from '../../lib/utils'
 
 const schema = z.object({
   descricao:     z.string().min(1, 'Obrigatório'),
@@ -46,7 +46,7 @@ export function ActivityForm({ open, onClose, projectId, activity }: Props) {
   const createActivity = useCreateActivity()
   const updateActivity = useUpdateActivity()
 
-  const { register, handleSubmit, watch, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       descricao: '', apres_inicial: 0, geometria: 0, setup: 0,
@@ -83,6 +83,17 @@ export function ActivityForm({ open, onClose, projectId, activity }: Props) {
   const values = watch()
   const horasColab = calcHorasColab(values as any)
   const horasTotais = calcHorasTotais(values as any)
+
+  // Auto-calculate data_fim and dias from data_inicio + hours
+  const dataInicio = values.data_inicio ?? ''
+  const computed = dataInicio ? calcDataFim(dataInicio, horasTotais) : null
+
+  useEffect(() => {
+    if (!dataInicio) return
+    const { dataFim, dias } = calcDataFim(dataInicio, horasTotais)
+    setValue('data_fim', dataFim || null)
+    setValue('dias', dias)
+  }, [dataInicio, horasTotais, setValue])
 
   async function onSubmit(data: FormData) {
     try {
@@ -146,17 +157,23 @@ export function ActivityForm({ open, onClose, projectId, activity }: Props) {
           </div>
         </div>
 
-        {/* Datas e extras */}
+        {/* Data início + preview calculado */}
         <div className="grid grid-cols-3 gap-3">
           <Field label="Data início">
             <input type="date" {...register('data_inicio')} className={inp()} />
           </Field>
-          <Field label="Data fim">
-            <input type="date" {...register('data_fim')} className={inp()} />
-          </Field>
-          <Field label="Dias">
-            <input type="number" step="0.1" min="0" {...register('dias', { valueAsNumber: true })} className={inp()} />
-          </Field>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Data fim <span className="text-gray-400">(calculada)</span></label>
+            <div className={`${inp()} bg-gray-50 text-gray-500 cursor-default select-none`}>
+              {computed ? formatDate(computed.dataFim) : '—'}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Dias úteis <span className="text-gray-400">(calculados)</span></label>
+            <div className={`${inp()} bg-gray-50 text-gray-500 cursor-default select-none`}>
+              {computed ? computed.dias.toFixed(1) : '—'}
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

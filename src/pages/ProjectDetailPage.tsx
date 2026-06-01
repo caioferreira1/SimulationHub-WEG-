@@ -2,16 +2,16 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Edit2, Plus, Copy, Check, Trash2, Clock,
-  FolderOpen, CalendarDays, CheckCircle2, RotateCcw,
+  FolderOpen, CalendarDays, CheckCircle2, RotateCcw, CircleCheck,
 } from 'lucide-react'
 import { useProject, useUpdateProject } from '../hooks/useProjects'
-import { useActivities, useDeleteActivity } from '../hooks/useActivities'
+import { useActivities, useDeleteActivity, useUpdateActivity, useCompleteAllActivities } from '../hooks/useActivities'
 import { ProjectForm } from '../components/projects/ProjectForm'
 import { ActivityForm } from '../components/activities/ActivityForm'
 import { StatusBadge, PrioridadeBadge } from '../components/ui/Badge'
 import { ProgressBar } from '../components/ui/ProgressBar'
 import {
-  formatDate, getPastaTrabalho, calcHorasColab, calcHorasTotais, calcProjectHours,
+  formatDate, getPastaTrabalho, calcHorasColab, calcHorasTotais, calcProjectHours, calcProjectProgress,
 } from '../lib/utils'
 import type { Activity } from '../types'
 
@@ -23,7 +23,9 @@ export function ProjectDetailPage() {
   const { data: project, isLoading: loadingProject } = useProject(projectId)
   const { data: activities = [], isLoading: loadingActivities } = useActivities(projectId)
   const deleteActivity = useDeleteActivity()
+  const updateActivity = useUpdateActivity()
   const updateProject = useUpdateProject()
+  const completeAllActivities = useCompleteAllActivities()
 
   const [showProjectForm, setShowProjectForm] = useState(false)
   const [showActivityForm, setShowActivityForm] = useState(false)
@@ -44,6 +46,7 @@ export function ProjectDetailPage() {
 
   const pastaTrabalho = getPastaTrabalho(project.project_code, project.tipo, project.caracteristica, project.linha)
   const hours = calcProjectHours(activities)
+  const displayProgress = loadingActivities ? project.andamento : calcProjectProgress(activities)
 
   function copyPasta() {
     navigator.clipboard.writeText(pastaTrabalho)
@@ -54,6 +57,15 @@ export function ProjectDetailPage() {
   async function handleDeleteActivity(actId: number) {
     if (!confirm('Excluir esta atividade?')) return
     await deleteActivity.mutateAsync({ id: actId, projectId })
+  }
+
+  async function handleCompleteActivity(act: Activity) {
+    const today = new Date().toISOString().split('T')[0]
+    await updateActivity.mutateAsync({
+      id: act.id,
+      status: 'Concluído',
+      data_fim: act.data_fim ?? today,
+    } as any)
   }
 
   return (
@@ -90,8 +102,11 @@ export function ProjectDetailPage() {
           <div className="flex items-center gap-2 flex-shrink-0">
             {project.status !== 'Concluído' && project.status !== 'Cancelado' ? (
               <button
-                onClick={() => updateProject.mutate({ id: projectId, status: 'Concluído', andamento: 100 })}
-                disabled={updateProject.isPending}
+                onClick={async () => {
+                  await completeAllActivities.mutateAsync(projectId)
+                  await updateProject.mutateAsync({ id: projectId, status: 'Concluído', andamento: 100 })
+                }}
+                disabled={updateProject.isPending || completeAllActivities.isPending}
                 className="flex items-center gap-1.5 text-sm bg-weg-blue hover:bg-weg-blue-dark text-white px-3 py-2 rounded-lg transition-colors disabled:opacity-60"
               >
                 <CheckCircle2 size={14} /> Concluir
@@ -130,9 +145,9 @@ export function ProjectDetailPage() {
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400 mb-1">
             <span>Andamento</span>
-            <span>{project.andamento}%</span>
+            <span>{displayProgress}%</span>
           </div>
-          <ProgressBar value={project.andamento} />
+          <ProgressBar value={displayProgress} />
         </div>
       </div>
 
@@ -198,6 +213,16 @@ export function ProjectDetailPage() {
                       <td className="px-4 py-3 text-gray-500 dark:text-slate-400 text-xs">{act.colaborador ?? '—'}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
+                          {act.status !== 'Concluído' && act.status !== 'Cancelado' && (
+                            <button
+                              onClick={() => handleCompleteActivity(act)}
+                              disabled={updateActivity.isPending}
+                              title="Concluir atividade"
+                              className="p-1.5 rounded text-gray-400 hover:text-weg-green hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
+                            >
+                              <CircleCheck size={13} />
+                            </button>
+                          )}
                           <button
                             onClick={() => { setEditActivity(act); setShowActivityForm(true) }}
                             className="p-1.5 rounded text-gray-400 hover:text-gray-700 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors"

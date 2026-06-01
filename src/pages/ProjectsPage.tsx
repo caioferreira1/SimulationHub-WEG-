@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus, Search, Filter, ChevronRight, CheckCircle2, Loader2 } from 'lucide-react'
 import { useProjects, useUpdateProject } from '../hooks/useProjects'
+import { useCompleteAllActivities } from '../hooks/useActivities'
 import { StatusBadge, PrioridadeBadge } from '../components/ui/Badge'
 import { ProgressBar } from '../components/ui/ProgressBar'
 import { ProjectForm } from '../components/projects/ProjectForm'
@@ -20,6 +21,7 @@ export function ProjectsPage() {
 
   const { data: projects = [], isLoading } = useProjects()
   const updateProject = useUpdateProject()
+  const completeAllActivities = useCompleteAllActivities()
 
   const [showForm, setShowForm] = useState(false)
   const [editProject, setEditProject] = useState<Project | null>(null)
@@ -50,6 +52,7 @@ export function ProjectsPage() {
     e.stopPropagation()
     setCompletingId(project.id)
     try {
+      await completeAllActivities.mutateAsync(project.id)
       await updateProject.mutateAsync({ id: project.id, status: 'Concluído', andamento: 100 })
     } finally {
       setCompletingId(null)

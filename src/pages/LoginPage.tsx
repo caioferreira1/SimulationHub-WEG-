@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { AppIcon } from '../components/ui/AppIcon'
@@ -6,8 +6,12 @@ import { AppIcon } from '../components/ui/AppIcon'
 type Mode = 'login' | 'signup'
 
 export function LoginPage() {
-  const { signIn, signUp } = useAuth()
+  const { signIn, signUp, user } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (user) navigate('/', { replace: true })
+  }, [user, navigate])
 
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')

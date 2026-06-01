@@ -1,6 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { calcProjectProgress } from '../lib/utils'
 import type { Activity } from '../types'
+
+async function syncProjectProgress(projectId: number) {
+  const { data: acts } = await supabase
+    .from('activities')
+    .select('*')
+    .eq('project_id', projectId)
+  const andamento = calcProjectProgress((acts as Activity[]) ?? [])
+  await supabase.from('projects').update({ andamento }).eq('id', projectId)
+}
 
 // ── Fetch activities for a project ───────────────────────────────────────────
 export function useActivities(projectId: number) {
@@ -34,8 +44,11 @@ export function useCreateActivity() {
       if (error) throw error
       return data as Activity
     },
-    onSuccess: (act) => {
+    onSuccess: async (act) => {
+      await syncProjectProgress(act.project_id)
       qc.invalidateQueries({ queryKey: ['activities', act.project_id] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['projects', act.project_id] })
     },
   })
 }
@@ -54,8 +67,11 @@ export function useUpdateActivity() {
       if (error) throw error
       return data as Activity
     },
-    onSuccess: (act) => {
+    onSuccess: async (act) => {
+      await syncProjectProgress(act.project_id)
       qc.invalidateQueries({ queryKey: ['activities', act.project_id] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['projects', act.project_id] })
     },
   })
 }
@@ -69,8 +85,32 @@ export function useDeleteActivity() {
       if (error) throw error
       return projectId
     },
-    onSuccess: (projectId) => {
+    onSuccess: async (projectId) => {
+      await syncProjectProgress(projectId)
       qc.invalidateQueries({ queryKey: ['activities', projectId] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['projects', projectId] })
+    },
+  })
+}
+
+// ── Complete all activities for a project ────────────────────────────────────
+export function useCompleteAllActivities() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (projectId: number) => {
+      const { error } = await supabase
+        .from('activities')
+        .update({ status: 'Concluído' })
+        .eq('project_id', projectId)
+      if (error) throw error
+      return projectId
+    },
+    onSuccess: async (projectId) => {
+      await syncProjectProgress(projectId)
+      qc.invalidateQueries({ queryKey: ['activities', projectId] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['projects', projectId] })
     },
   })
 }

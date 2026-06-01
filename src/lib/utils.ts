@@ -56,6 +56,55 @@ export function calcProjectHours(activities: Activity[]) {
   return { horasColabTotal, horasProcessTotal, horasAbertas, horasFechadas }
 }
 
+export function calcProjectProgress(activities: Activity[]): number {
+  if (activities.length === 0) return 0
+
+  const totalHours = activities.reduce((sum, act) => sum + calcHorasTotais(act), 0)
+
+  if (totalHours === 0) {
+    const completed = activities.filter(a => a.status === 'Concluído').length
+    return Math.round((completed / activities.length) * 100)
+  }
+
+  const completedHours = activities
+    .filter(a => a.status === 'Concluído')
+    .reduce((sum, act) => sum + calcHorasTotais(act), 0)
+
+  return Math.round((completedHours / totalHours) * 100)
+}
+
+export function calcDataFim(
+  dataInicio: string,
+  horasTotais: number,
+): { dataFim: string; dias: number } {
+  const HOURS_PER_DAY = 8
+
+  if (!dataInicio) return { dataFim: '', dias: 0 }
+  if (horasTotais <= 0) return { dataFim: dataInicio, dias: 0 }
+
+  const diasNecessarios = Math.ceil(horasTotais / HOURS_PER_DAY)
+  const [y, m, d] = dataInicio.split('-').map(Number)
+  let current = new Date(y, m - 1, d)
+
+  // If start is on weekend, advance to next Monday
+  while (current.getDay() === 0 || current.getDay() === 6) {
+    current.setDate(current.getDate() + 1)
+  }
+
+  // Advance (diasNecessarios - 1) additional working days
+  let remaining = diasNecessarios - 1
+  while (remaining > 0) {
+    current.setDate(current.getDate() + 1)
+    if (current.getDay() !== 0 && current.getDay() !== 6) {
+      remaining--
+    }
+  }
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const dataFim = `${current.getFullYear()}-${pad(current.getMonth() + 1)}-${pad(current.getDate())}`
+  return { dataFim, dias: Math.round((horasTotais / HOURS_PER_DAY) * 10) / 10 }
+}
+
 export function formatDate(date: string | null | undefined): string {
   if (!date) return '—'
   const [year, month, day] = date.split('-')
