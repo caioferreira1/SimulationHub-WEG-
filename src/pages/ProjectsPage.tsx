@@ -32,6 +32,17 @@ export function ProjectsPage() {
   const [filterTipo, setFilterTipo] = useState(navState?.filterTipo ?? '')
   const [filterSecao, setFilterSecao] = useState('')
   const [filterColab, setFilterColab] = useState('')
+  const [filterSolicitante, setFilterSolicitante] = useState('')
+  const [filterLinha, setFilterLinha] = useState('')
+
+  const solicitantesUnicos = useMemo(() =>
+    [...new Set(projects.map(p => p.solicitante).filter(Boolean))].sort(),
+    [projects]
+  )
+  const linhasUnicas = useMemo(() =>
+    [...new Set(projects.map(p => p.linha).filter(Boolean))].sort(),
+    [projects]
+  )
 
   const filtered = useMemo(() => {
     return projects.filter(p => {
@@ -42,11 +53,13 @@ export function ProjectsPage() {
       if (filterTipo && p.tipo !== filterTipo) return false
       if (filterSecao && p.secao !== filterSecao) return false
       if (filterColab && p.colaborador !== filterColab) return false
+      if (filterSolicitante && p.solicitante !== filterSolicitante) return false
+      if (filterLinha && p.linha !== filterLinha) return false
       return true
     })
-  }, [projects, search, filterStatus, filterTipo, filterSecao, filterColab])
+  }, [projects, search, filterStatus, filterTipo, filterSecao, filterColab, filterSolicitante, filterLinha])
 
-  const hasFilters = filterStatus || filterTipo || filterSecao || filterColab
+  const hasFilters = filterStatus || filterTipo || filterSecao || filterColab || filterSolicitante || filterLinha
 
   async function handleComplete(e: React.MouseEvent, project: Project) {
     e.stopPropagation()
@@ -101,9 +114,15 @@ export function ProjectsPage() {
           <Select value={filterColab} onChange={setFilterColab} placeholder="Colaborador">
             {COLABORADORES.map(c => <option key={c} value={c}>{c}</option>)}
           </Select>
+          <Select value={filterSolicitante} onChange={setFilterSolicitante} placeholder="Solicitante">
+            {solicitantesUnicos.map(s => <option key={s} value={s}>{s}</option>)}
+          </Select>
+          <Select value={filterLinha} onChange={setFilterLinha} placeholder="Linha">
+            {linhasUnicas.map(l => <option key={l} value={l}>{l}</option>)}
+          </Select>
           {hasFilters && (
             <button
-              onClick={() => { setFilterStatus(''); setFilterTipo(''); setFilterSecao(''); setFilterColab('') }}
+              onClick={() => { setFilterStatus(''); setFilterTipo(''); setFilterSecao(''); setFilterColab(''); setFilterSolicitante(''); setFilterLinha('') }}
               className="text-xs text-weg-blue dark:text-blue-400 hover:text-weg-blue-dark underline"
             >
               Limpar filtros
@@ -133,6 +152,7 @@ export function ProjectsPage() {
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-slate-400 text-xs uppercase tracking-wide">Linha</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-slate-400 text-xs uppercase tracking-wide">Status</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-slate-400 text-xs uppercase tracking-wide">Prioridade</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-slate-400 text-xs uppercase tracking-wide">Solicitante</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-slate-400 text-xs uppercase tracking-wide">Colaborador</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-slate-400 text-xs uppercase tracking-wide w-32">Andamento</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-slate-400 text-xs uppercase tracking-wide">Entrada</th>
@@ -149,12 +169,12 @@ export function ProjectsPage() {
                     <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-slate-400">{project.project_code}</td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900 dark:text-slate-200 truncate max-w-56">{project.descricao}</div>
-                      <div className="text-xs text-gray-400 dark:text-slate-500">{project.solicitante}</div>
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-slate-400">{project.tipo}</td>
                     <td className="px-4 py-3 text-gray-600 dark:text-slate-400 whitespace-nowrap">{project.linha}</td>
                     <td className="px-4 py-3"><StatusBadge status={project.status} /></td>
                     <td className="px-4 py-3"><PrioridadeBadge prioridade={project.prioridade} /></td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-slate-400">{project.solicitante}</td>
                     <td className="px-4 py-3 text-gray-600 dark:text-slate-400">{project.colaborador}</td>
                     <td className="px-4 py-3">
                       <ProgressBar value={project.andamento} showLabel />

@@ -123,13 +123,6 @@ export function DashboardPage() {
             <BarChart
               data={tipoData}
               margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
-              onClick={(data) => {
-                const payload = data?.activePayload?.[0]?.payload
-                if (payload?.tipo) {
-                  const filtered = projects.filter(p => p.tipo === payload.tipo)
-                  setChartPanel({ title: `Tipo: ${payload.tipo}`, projects: filtered })
-                }
-              }}
             >
               <XAxis dataKey="tipo" tick={tickStyle} angle={-30} textAnchor="end" height={50} />
               <YAxis tick={tickStyle} allowDecimals={false} />
@@ -139,6 +132,12 @@ export function DashboardPage() {
                 radius={[4, 4, 0, 0]}
                 name="Projetos"
                 cursor="pointer"
+                onClick={(data: { tipo: string }) => {
+                  if (data?.tipo) {
+                    const filtered = projects.filter(p => p.tipo === data.tipo)
+                    setChartPanel({ title: `Tipo: ${data.tipo}`, projects: filtered })
+                  }
+                }}
                 onMouseEnter={(_: unknown, idx: number) => setActiveTipoIdx(idx)}
                 onMouseLeave={() => setActiveTipoIdx(null)}
               >
